@@ -1,32 +1,13 @@
-#ifndef MatrixH
-#define	MatrixH
+#ifndef Matrix2x2H
+#define	Matrix2x2H
 
 #include "vec.hpp"
 
-template <class Class> class class_traits
+template <class T> class mat<T,2,2>
 {
 public:
-    typedef Class type;
-    typedef type& ref;
-    typedef type* ptr;
-    typedef const type& cref;
-    typedef type * const cptr;
-};
-
-template <class Class, class T> class container_traits : 
-    public class_traits<Class, container_traits>
-{
-public:
-    typedef T item_type;
-    typedef container_traits type;
-};
-
-template <class T, unsigned Rows, unsigned Cols> class mat :
-    public container_traits<mat, T>
-{
-public:
-    const unsigned row_count = Rows;
-    const unsigned col_count = Cols;
+    const unsigned Rows = 2;
+    const unsigned Cols = 2;
     typedef mat<T,Cols,Rows> transpose_type;
     typedef mat<T,Cols-1, Rows-1> minor_type;
     typedef vec<T,Cols> row_vector_type;
@@ -35,11 +16,11 @@ public:
     
     enum {eDiag=1, eNonDiag=2, eAll=(eNonDiag|eDiag)};
     
-    static const type ONE = type(1, eDiag);
-    static const type ZERO = type(0, eAll);
+    static const type ONE;
+    static const type ZERO;
     
-    template <unsigned P, unsigned Q>
-        friend class mat<T, P, Q>;
+    template <unsigned N, unsigned M>
+        friend class mat<T, N, M>;
         
 	///default constructor - does nothing
     mat() {}
@@ -62,7 +43,7 @@ public:
                     m_Data[i][j] = aValue;
         }
     }
-    
+	
 	///copy constructor
     mat(cref aCopy) 
     {
@@ -86,9 +67,9 @@ public:
     transpose_type transpose() const
     {
         transpose_type result;
-        for(unsigned i=0; i<Rows; ++i)
-            for(unsigned j=0; j<Cols; ++j)
-                result.m_Data[i][j] = m_Data[j][i];
+		t = m_Data[0][1];
+		m_Data[0][1] = m_Data[1][0];
+		m_Data[1][0] = m_Data[0][1];
         return result;
     }
     
@@ -132,11 +113,29 @@ public:
 	///returns matrix determinant
     item_type det() const
     {
+		return m_Data[0][0]*m_Data[1][1]-m_Data[0][1]*m_Data[1][0];
     }
     
 	///returns inversed square matrix 
     type inverse() const
-    {		
+    {        
+        type result(type::ONE);
+		
+        type copy(*this);
+        typename row_vector_type::item_type k;
+        
+        for(unsigned i=0; i<Rows; ++i)
+        {
+            k = copy[i][i];
+            for(unsigned j=i+1; j<Rows; ++j)
+            {
+                copy[j] -= (copy[j][i]/k)*copy[i];
+                result[j] -= (result[j][i]/k)*result[i];
+            }
+            copy[i] /= k;
+        }
+        
+        return result;
     }
     
     ///calculates LUx decomposition
@@ -248,14 +247,17 @@ public:
     
 private:
     vec<T, Cols>::type m_Data[Rows];
+	
     //item_type m_Data[Rows*Cols];
 };
 
-template <class T, unsigned Rows, unsigned Cols> 
-	const mat<T,Rows,Cols>::type mat<T,Rows,Cols>::ONE = type(1, eDiag);
+typedef mat<T,2,2> mat2x2;
+
+template <class T> 
+	const mat2x2::type mat2x2::ONE = mat2x2(1, eDiag);
 	
-template <class T, unsigned Rows, unsigned Cols> 
-	const mat<T,Rows,Cols>::type mat<T,Rows,Cols>::ZERO = type(0, eAll);
+template <class T> 
+	const mat2x2::type mat2x2::ZERO = mat2x2(0, eAll);
 	
 //brakuje speca dla 2x2, on wyczerpuje minor :) 
 //i ogolnie jest prostz w implementacji
@@ -267,5 +269,5 @@ template <class T, unsigned Rows, unsigned Cols>
 //{
 //};
 
-#endif	/* MatrixH */
+#endif	/* Matrix2x2H */
 

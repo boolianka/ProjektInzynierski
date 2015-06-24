@@ -1,32 +1,13 @@
-#ifndef MatrixH
-#define	MatrixH
+#ifndef Matrix3x3H
+#define	Matrix3x3H
 
 #include "vec.hpp"
 
-template <class Class> class class_traits
+template <class T> class mat<T,3,3>
 {
 public:
-    typedef Class type;
-    typedef type& ref;
-    typedef type* ptr;
-    typedef const type& cref;
-    typedef type * const cptr;
-};
-
-template <class Class, class T> class container_traits : 
-    public class_traits<Class, container_traits>
-{
-public:
-    typedef T item_type;
-    typedef container_traits type;
-};
-
-template <class T, unsigned Rows, unsigned Cols> class mat :
-    public container_traits<mat, T>
-{
-public:
-    const unsigned row_count = Rows;
-    const unsigned col_count = Cols;
+    const unsigned Rows = 3;
+    const unsigned Cols = 3;
     typedef mat<T,Cols,Rows> transpose_type;
     typedef mat<T,Cols-1, Rows-1> minor_type;
     typedef vec<T,Cols> row_vector_type;
@@ -35,11 +16,11 @@ public:
     
     enum {eDiag=1, eNonDiag=2, eAll=(eNonDiag|eDiag)};
     
-    static const type ONE = type(1, eDiag);
-    static const type ZERO = type(0, eAll);
+    static const type ONE;
+    static const type ZERO;
     
-    template <unsigned P, unsigned Q>
-        friend class mat<T, P, Q>;
+    template <unsigned N, unsigned M>
+        friend class mat<T, N, M>;
         
 	///default constructor - does nothing
     mat() {}
@@ -130,13 +111,40 @@ public:
     }
     
 	///returns matrix determinant
-    item_type det() const
+    item_type det() const                                                       //TO DO
     {
+        //wymnozenie diagonali w macierzy diagonalnej, uzyskanej z eliminacji gaussa
     }
     
 	///returns inversed square matrix 
-    type inverse() const
-    {		
+    type inverse() const                                                   //TO DO
+    {
+        
+        //liczby calkowite nalezaloby rozszerzyc do ulamkow (inaczej sie nie da))
+        
+        //x e R: mat(i,i) = max(mat.col(i))
+        //x e Z: mat(i,i) = min(mat.col(i)) albo gcd?
+                
+        if(Rows != Cols)
+            throw "Matrix inversion error";//return result;
+        
+        type result(type::ONE);
+        
+        type copy(*this);
+        typename row_vector_type::item_type k;
+        
+        for(unsigned i=0; i<Rows; ++i)
+        {
+            k = copy[i][i];
+            for(unsigned j=i+1; j<Rows; ++j)
+            {
+                copy[j] -= (copy[j][i]/k)*copy[i];
+                result[j] -= (result[j][i]/k)*result[i];
+            }
+            copy[i] /= k;
+        }
+        
+        return result;
     }
     
     ///calculates LUx decomposition
@@ -251,11 +259,11 @@ private:
     //item_type m_Data[Rows*Cols];
 };
 
-template <class T, unsigned Rows, unsigned Cols> 
-	const mat<T,Rows,Cols>::type mat<T,Rows,Cols>::ONE = type(1, eDiag);
+template <class T> 
+	const mat<T,3,3>::type mat<T,3,3>::ONE = type(1, eDiag);
 	
-template <class T, unsigned Rows, unsigned Cols> 
-	const mat<T,Rows,Cols>::type mat<T,Rows,Cols>::ZERO = type(0, eAll);
+template <class T> 
+	const mat<T,3,3>::type mat<T,3,3>::ZERO = type(0, eAll);
 	
 //brakuje speca dla 2x2, on wyczerpuje minor :) 
 //i ogolnie jest prostz w implementacji
@@ -267,5 +275,5 @@ template <class T, unsigned Rows, unsigned Cols>
 //{
 //};
 
-#endif	/* MatrixH */
+#endif	/* Matrix3x3H */
 
